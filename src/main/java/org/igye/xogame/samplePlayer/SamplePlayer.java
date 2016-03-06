@@ -1,7 +1,6 @@
 package org.igye.xogame.samplePlayer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import akka.event.LoggingAdapter;
 import org.igye.xogameclient.XOGamePlayer;
 import org.igye.xogamecommons.Cell;
 import org.igye.xogamecommons.Cells;
@@ -10,10 +9,11 @@ import scala.Option;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class SamplePlayer implements XOGamePlayer {
-    private Logger log = LogManager.getLogger();
+    private LoggingAdapter log;
 
     private String myName;
 
@@ -24,8 +24,18 @@ public class SamplePlayer implements XOGamePlayer {
     }
 
     @Override
+    public void setLogger(LoggingAdapter loggingAdapter) {
+        log = loggingAdapter;
+    }
+
+    @Override
     public String getName() {
         return myName;
+    }
+
+    @Override
+    public void matchStarted(String s) {
+        log.info("Match started: {}", s);
     }
 
     public void gameStarted(String msg, Cell cellType) {
@@ -42,7 +52,17 @@ public class SamplePlayer implements XOGamePlayer {
         return availableCells.get(new Random().nextInt(availableCells.size()));
     }
 
-    public void gameOver(Option<String> winner, String msg) {
+    public void gameOver(Option<String> winner, String msg, XOField field) {
+        log.info("Final state:\n{}", field);
+        if (winner.isDefined() && winner.get().equals(myName)) {
+            log.info("Game over: success!!!!");
+        } else {
+            log.info("Game over: fail:(");
+        }
+    }
+
+    @Override
+    public void matchOver(int gamesPlayed, Map<String, Integer> scores, Option<String> winner) {
         if (winner.isDefined() && winner.get().equals(myName)) {
             log.info("SUCCESS!!!!");
         } else {
